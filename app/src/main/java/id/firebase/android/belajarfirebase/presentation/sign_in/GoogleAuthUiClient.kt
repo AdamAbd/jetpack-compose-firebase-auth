@@ -16,13 +16,13 @@ import java.util.concurrent.CancellationException
 
 class GoogleAuthUiClient(
     private val context: Context,
-    private val onTapClient: SignInClient
+    private val oneTapClient: SignInClient
 ) {
     private val auth = Firebase.auth
 
     suspend fun signIn(): IntentSender? {
         val result = try {
-            onTapClient.beginSignIn(
+            oneTapClient.beginSignIn(
                 beginSignInRequest()
             ).await()
         } catch (e: Exception) {
@@ -34,7 +34,7 @@ class GoogleAuthUiClient(
     }
 
     suspend fun signInWithIntent(intent: Intent): SignInResult {
-        val credential = onTapClient.getSignInCredentialFromIntent(intent)
+        val credential = oneTapClient.getSignInCredentialFromIntent(intent)
         val googleIdToken = credential.googleIdToken
         val googleCredential = GoogleAuthProvider.getCredential(googleIdToken, null)
 
@@ -60,7 +60,7 @@ class GoogleAuthUiClient(
         }
     }
 
-    fun getSignInUser(): UserData? = auth.currentUser?.run {
+    fun getSignedInUser(): UserData? = auth.currentUser?.run {
         UserData(
             userId = uid,
             username = displayName,
@@ -70,7 +70,7 @@ class GoogleAuthUiClient(
 
     suspend fun signOut() {
         try {
-            onTapClient.signOut().await()
+            oneTapClient.signOut().await()
             auth.signOut()
         } catch (e: Exception) {
             e.printStackTrace()
