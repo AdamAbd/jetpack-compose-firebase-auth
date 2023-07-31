@@ -68,6 +68,10 @@ dependencies {
 //    Google Auth SDK
     implementation("com.google.android.gms:play-services-auth:20.6.0")
 
+//    Lifecycle
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.1")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.6.1")
+
 //    Navigation
     implementation("androidx.navigation:navigation-compose:2.6.0")
 
