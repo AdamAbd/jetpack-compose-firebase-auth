@@ -28,7 +28,7 @@ import id.firebase.android.belajarfirebase.ui.theme.BelajarFirebaseTheme
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
-
+    // Lazily initialize GoogleAuthUiClient
     private val googleAuthUiClient by lazy {
         GoogleAuthUiClient(
             context = applicationContext,
@@ -39,24 +39,32 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
+            // Apply the custom theme for the app
             BelajarFirebaseTheme {
-                // A surface container using the 'background' color from the theme
+                // A surface container that applies material design styles
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
+                    // Create and remember a NavController
                     val navController = rememberNavController()
+                    // A composable that hosts the navigation graph
                     NavHost(navController = navController, startDestination = "sign_in") {
+                        // Define the sign_in destination
                         composable("sign_in") {
+                            // Instantiate the ViewModel
                             val viewModel = viewModel<SignInViewModel>()
+                            // Collect the ViewModel state
                             val state by viewModel.state.collectAsStateWithLifecycle()
 
+                            // Launch a Coroutine to check if user is already signed in
                             LaunchedEffect(key1 = Unit) {
                                 if(googleAuthUiClient.getSignedInUser() != null) {
                                     navController.navigate("profile")
                                 }
                             }
 
+                            // Hook into the Activity Result API
                             val launcher = rememberLauncherForActivityResult(
                                 contract = ActivityResultContracts.StartIntentSenderForResult(),
                                 onResult = { result ->
@@ -65,12 +73,14 @@ class MainActivity : ComponentActivity() {
                                             val signInResult = googleAuthUiClient.signInWithIntent(
                                                 intent = result.data ?: return@launch
                                             )
+                                            // Handle the sign-in result
                                             viewModel.onSignInResult(signInResult)
                                         }
                                     }
                                 }
                             )
 
+                            // Launch a Coroutine to check if sign-in is successful
                             LaunchedEffect(key1 = state.isSignInSuccessful) {
                                 if(state.isSignInSuccessful) {
                                     Toast.makeText(
@@ -80,15 +90,18 @@ class MainActivity : ComponentActivity() {
                                     ).show()
 
                                     navController.navigate("profile")
+                                    // Reset the ViewModel state
                                     viewModel.resetState()
                                 }
                             }
 
+                            // Display the SignInScreen with ViewModel state and onSignInClick function
                             SignInScreen(
                                 state = state,
                                 onSignInClick = {
                                     lifecycleScope.launch {
                                         val signInIntentSender = googleAuthUiClient.signIn()
+                                        // Launch the activity for result
                                         launcher.launch(
                                             IntentSenderRequest.Builder(
                                                 signInIntentSender ?: return@launch
@@ -98,18 +111,25 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
                         }
+
+                        // Define the profile destination
                         composable("profile") {
+                            // Display the ProfileScreen with the user's data and a function to handle sign-outs
                             ProfileScreen(
+                                // Get the signed-in user's data
                                 userData = googleAuthUiClient.getSignedInUser(),
+                                // Define what happens when the user signs out
                                 onSignOut = {
                                     lifecycleScope.launch {
+                                        // Sign out the user
                                         googleAuthUiClient.signOut()
+                                        // Show a toast message to confirm sign-out
                                         Toast.makeText(
                                             applicationContext,
                                             "Signed out",
                                             Toast.LENGTH_LONG
                                         ).show()
-
+                                        // Navigate back to the previous screen
                                         navController.popBackStack()
                                     }
                                 }
